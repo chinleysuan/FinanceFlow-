@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Lato", sans-serif;
+    }
+
+    .main-container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding-bottom: -1px;
+      background-color: #66D2CE;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 1px 0 3px;
+      font-size: 22px;
+      font-weight: 700;
+      color: black;
+    }
+
+    .profile-pic-wrapper {
+      text-align: center;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .camera-icon {
+      position: absolute;
+      right: calc(50% - 44px);
+      bottom: 0;
+      border-radius: 50%;
+      padding: 4px;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 4px;
+    }
+
+    .form-container {
+      background: white;
+      border-radius: 6rem 6rem 0 0;
+      margin: 25px 0;
+      padding: 106px 25px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .form-group {
+      margin-bottom: 5px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600px;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #51DE9A;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .save-button {
+      display: block;
+      width: 120px;
+      margin: -95px auto 0;
+      padding: 10px 0;
+      background-color: #51DE9A ;
+      color: black;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .save-button:hover {
+      background-color: #66D2CE ;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      padding: 7px 0;
+      background: #f0fff4;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 400px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 12px 12px 0 0;
+      box-shadow: -1 -3px 5px rgba(0, 0, 0, 0.1);
+      border: 2px solid lightblue;
+    }
+
+    .nav-item img {
+      width: 30px;
+      height: 30px;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1>Edit Profile</h1>
+
+    <div class="profile-pic-wrapper">
+      <img src="chinley.jpeg" alt="Profile" class="profile-pic" />
+      <img src="camera-icon.png" alt="Camera" class="camera-icon" />
+    </div>
+
+    <div class="form-container">
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="lastName" name="lastName">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password">
+      </div>
+    </div>
+    
+    <button type="submit" class="save-button">Save</button>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item"><img src="home_icon.png" alt="Home" /></div>
+    <div class="nav-item"><img src="analysis_icon.jpeg" alt="Chart" /></div>
+    <div class="nav-item"><img src="scan_icon.jpeg" alt="Scan" /></div>
+    <div class="nav-item"><img src="manual_icon.png" alt="List" /></div>
+    <div class="nav-item"><img src="profile_icon.png" alt="Profile" /></div>
+  </div>
+</body>
+</html>

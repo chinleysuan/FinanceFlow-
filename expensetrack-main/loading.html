@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        *{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: "Lato", sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            text-align: center;
+            height: 100vh; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+           
+        }
+
+        .container {
+            background-color: white;           
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            text-align: center;
+            
+        }
+
+        @keyframes dropDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .top-section {
+            background-color: #66D2CE;
+            padding: 20px;
+            border-radius: 0 0 40px 40px;
+            animation: dropDown 0.8s ease-out;
+        }
+
+
+        .illustration {
+            width: 100%;
+            max-width: 250px;
+        }
+
+        h1 {
+            color: #51DE9A;
+            font-size: 24px;
+            margin-top: 35px;
+        }
+
+        p {
+            
+            color: #66D2CE;
+            font-size: 15px;
+            margin-bottom: 40px;
+        }
+
+        button {
+            font-weight: bold;
+            width: 90%;
+            padding: 12px;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+
+        .login-button {
+            background-color: #51DE9A;
+            border: 2px solid #66D2CE;
+            color: white;
+        }
+        .signup-button {
+            background-color: white;
+            border: 1px solid #51DE9A;
+            color:black;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-section">
+            <img src="loadinglogo.png" alt="FinanceFlow Illustration" class="illustration">
+        </div>
+        <h1 class="title">FinanceFlow</h1>
+        <p class="subtitle">Track, Manage, and Control Expenses Easily!</p>
+        <button class="login-button">Login</button>
+        <button class="signup-button">Signup</button>
+    </div>
+
+    <script>
+        const loginButton = document.querySelector('.login-button');
+        const signupButton = document.querySelector('.signup-button');
+
+        loginButton.addEventListener('click', () => {
+              window.location.href = "login.html"; // Replace with your actual login page URL
+        });
+
+        signupButton.addEventListener('click', () => {
+           window.location.href = "signup.html"; // Replace with your actual signup page URL
+          
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manual Records</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 5px;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin: auto;
+      margin-top: -39px;
+    }
+    h2 {
+      font-size: 30px;
+      margin-bottom: 20px;
+      background: #66D2CE;
+      padding: 5px;
+      color: black;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 2px solid black;
+      padding: 8px;
+      font-size: 13px;
+    }
+    th {
+      background-color: #d6f0f3;
+    }
+    .plus-row {
+      color: #2aa7ff;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+    }
+    .total-box {
+      background-color: #51de9a;
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      display: inline-block;
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .total-label {
+      font-size: 16px;
+      color: black;
+      margin-top: 5px;
+      font-weight: bold;
+      text-align: right;
+    }
+    input {
+      width: 100%;
+      border: none;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-bottom: 1px solid gray;
+    }
+    #save-all-btn {
+      background-color: #51de9a;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    #save-all-btn:hover {
+      background-color: #3cb67d;
+    }
+    .message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .success-message {
+      color: green;
+    }
+    .error-message {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Manual Records</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>T Description</th>
+          <th>Category</th>
+          <th>₱ Amount</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr class="plus-row" id="add-row">
+          <td colspan="5">+</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button id="save-all-btn">Save All Records</button>
+    <div id="message" class="message"></div>
+
+    <div class="total-box">
+      <span class="currency">₱</span> <span id="total-spend">0.00</span>
+    </div>
+    <div class="total-label">Total spend</div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
+      "https://bwpzqbaemdcwwnreafgt.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc"
+    );
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const addRow = document.getElementById("add-row");
+      const tableBody = document.getElementById("table-body");
+      const totalSpend = document.getElementById("total-spend");
+      const saveAllBtn = document.getElementById("save-all-btn");
+      const messageDiv = document.getElementById("message");
+
+      function updateTotal() {
+        let total = 0;
+        document.querySelectorAll(".amount-input").forEach((input) => {
+          let value = parseFloat(input.value) || 0;
+          total += value;
+        });
+        totalSpend.textContent = total.toFixed(2);
+      }
+
+      addRow.addEventListener("click", function () {
+        const rowCount = tableBody.querySelectorAll("tr:not(.plus-row)").length + 1;
+        const newRow = document.createElement("tr");
+
+        newRow.innerHTML = `
+          <td>${rowCount}.</td>
+          <td><input type="text" class="desc-input" placeholder="Description"></td>
+          <td><input type="text" class="category-input" placeholder="Category"></td>
+          <td>₱ <input type="number" class="amount-input" placeholder="0.00" min="0"></td>
+          <td><input type="date" class="date-input" value="${new Date().toISOString().split("T")[0]}"></td>
+        `;
+
+        tableBody.insertBefore(newRow, addRow);
+        newRow.querySelector(".amount-input").addEventListener("input", updateTotal);
+      });
+
+      saveAllBtn.addEventListener("click", async function () {
+        messageDiv.textContent = "";
+        messageDiv.className = "message";
+
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.id) {
+          messageDiv.textContent = "User not logged in.";
+          messageDiv.className = "error-message";
+          return;
+        }
+
+        const { data: existingUser, error: userError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("auth_id", user.id)
+          .maybeSingle();
+
+        if (userError) {
+          console.error("Error checking user:", userError);
+          messageDiv.textContent = "Error verifying user.";
+          messageDiv.className = "error-message";
+          return;
+        }
+
+        if (!existingUser) {
+          const { data: newUser, error: insertUserError } = await supabase
+            .from("users")
+            .insert([{ auth_id: user.id, email: user.email || null }])
+            .select()
+            .single();
+
+          if (insertUserError) {
+            console.error("Error creating user:", insertUserError);
+            messageDiv.textContent = "Failed to create user record.";
+            messageDiv.className = "error-message";
+            return;
+          }
+          user.id = newUser.id;
+        } else {
+          user.id = existingUser.id;
+        }
+
+        const rows = tableBody.querySelectorAll("tr:not(.plus-row)");
+        const recordsToInsert = [];
+
+        for (const row of rows) {
+          const descriptionInput = row.querySelector(".desc-input");
+          const categoryInput = row.querySelector(".category-input");
+          const amountInput = row.querySelector(".amount-input");
+          const dateInput = row.querySelector(".date-input");
+
+          if (descriptionInput && categoryInput && amountInput && dateInput) {
+            const description = descriptionInput.value.trim();
+            const categoryName = categoryInput.value.trim();
+            const amount = parseFloat(amountInput.value);
+            const date = dateInput.value;
+
+            if (description && categoryName && !isNaN(amount) && date) {
+              const { data: categoryData, error: catError } = await supabase
+                .from("categories")
+                .select("category_id")
+                .eq("name", categoryName)
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+              let categoryId = categoryData?.category_id;
+
+              if (!categoryId) {
+                const { data: newCat, error: insertCatErr } = await supabase
+                  .from("categories")
+                  .insert([{ name: categoryName, user_id: user.id }])
+                  .select("category_id")
+                  .single();
+
+                if (insertCatErr || !newCat) {
+                  messageDiv.textContent = `Error creating category "${categoryName}"`;
+                  messageDiv.className = "error-message";
+                  return;
+                }
+                categoryId = newCat.category_id;
+              }
+
+              recordsToInsert.push({
+                user_id: user.id,
+                description,
+                category_id: categoryId,
+                amount,
+                date,
+                source: "manual",
+              });
+            }
+          }
+        }
+
+        if (recordsToInsert.length > 0) {
+          try {
+            const { data, error } = await supabase
+              .from("expenses")
+              .insert(recordsToInsert)
+              .select();
+
+            if (error) throw error;
+
+            messageDiv.textContent = `${recordsToInsert.length} records saved successfully!`;
+            messageDiv.className = "success-message";
+
+            tableBody.querySelectorAll("tr:not(.plus-row)").forEach((row) => row.remove());
+            updateTotal();
+          } catch (error) {
+            console.error("Error saving records:", error);
+            messageDiv.textContent = `Error saving records: ${error.message}`;
+            messageDiv.className = "error-message";
+          }
+        } else {
+          messageDiv.textContent = "No valid records to save.";
+          messageDiv.className = "error-message";
+        }
+      });
+    });
+  </script>
+</body>
+</html>

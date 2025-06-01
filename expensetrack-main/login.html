@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In | FinanceFlow</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0;
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family:"Lato", sans-serif;
+        }
+        body {
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            background-color: #f8f9fa; 
+        }
+        .container { 
+            background-color: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            width: 320px; 
+            text-align: center; 
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); 
+        }
+        .logo { 
+            width: 150px; 
+            margin-bottom: 10px; 
+        }
+        h2 { 
+            margin-bottom: 10px; 
+        }
+        p { 
+            color: #66D2CE;
+            font-size: 14px; 
+            margin-bottom: 20px; 
+            font-weight: bolder;
+        }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border: 1px solid #51DE9A; 
+            border-radius: 5px; 
+            font-size: 16px; 
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 10px; 
+            background-color: #51DE9A; 
+            border: none; 
+            color: white; 
+            font-size: 16px; 
+            font-weight: bold; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+         button:not(.signup-link):hover {
+            background-color: #45c487;
+        }
+        .signup-link {
+            background-color: transparent;
+            color: #66D2CE;
+            font-weight: bold;
+            border: none;
+            margin-top: 10px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="logo.png" alt="FinanceFlow Logo" class="logo">
+        <h2>Log In</h2>
+        <p>Please log in to continue using our app</p>
+
+        <form id="login-form" method="POST">
+            <input type="email" id="email" name="email" placeholder="Email" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="submit">Log In</button>
+        </form>
+
+        <button class="signup-link" onclick="window.location.href='signup.html'">
+            Don't have an account? Sign up
+        </button>
+    </div>
+    <script>
+        const SUPABASE_URL = "https://bwpzqbaemdcwwnreafgt.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc";
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+        async function handleLogin(event) {
+            event.preventDefault();
+    
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+    
+            if (!email || !password) {
+                alert("Please enter both email and password.");
+                return;
+            }
+    
+            try {
+                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+    
+                if (authError) {
+                    console.error("Supabase Auth Error:", authError); // Log the entire error object
+                    alert("Login failed: " + authError.message);
+                    return;
+                }
+    
+                console.log("Authentication successful:", authData); // Log successful auth data
+    
+                const userId = authData.user?.id;
+                if (userId) {
+                    const { data: userInfo, error: userError } = await supabaseClient
+                        .from("users")
+                        .select("*")
+                        .eq("id", userId)
+                        .single();
+    
+                    if (userError) {
+                        console.error("Supabase User Profile Error:", userError); // Log user profile error
+                        alert("Error fetching user profile.");
+                        return;
+                    }
+    
+                    if (userInfo) {
+                        localStorage.setItem("user", JSON.stringify(userInfo));
+                        alert("Login successful! Redirecting...");
+                        window.location.href = "homepage.html";
+                    } else {
+                        alert("User profile not found in the database.");
+                    }
+                } else {
+                    alert("User ID not found after authentication.");
+                }
+    
+            } catch (err) {
+                console.error("Unexpected Login Error:", err); // Log unexpected errors
+                alert("An unexpected error occurred during login.");
+            }
+        }
+    
+        document.getElementById("login-form").addEventListener("submit", handleLogin);
+    </script>
+</body>
+</html>

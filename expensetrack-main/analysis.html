@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { 
+    font-family: Arial, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background: #f8f8f8; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    }
+    .container {
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin: 30px auto;
+    }
+    h1 { 
+    background: #66D2CE; 
+    margin: -10px; 
+    padding: 6px 0; 
+    color: black; 
+    text-align: center; 
+    }
+    .tabs { 
+    display: flex; 
+    justify-content: space-around; 
+    background: #66D2CE; 
+    border-radius: 10px; 
+    padding: 5px;
+    margin-top: 23px; 
+    }
+    .tabs button { 
+    background: none; 
+    border: none; 
+    padding: 10px; 
+    cursor: pointer; 
+    font-weight: 900; 
+    flex: 1; 
+    font-size: 20px; }
+    .tabs .active { 
+    background: #51DE9A; 
+    color: black; 
+    border-radius: 8px; }
+    .balance {
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between;
+      font-size: 16px; 
+      margin: 17px 0 0;
+    }
+    .balance span { 
+    margin-left: 8px; 
+    }
+    .balance p {
+      margin-left: 20px; 
+      font-weight: 800;
+      margin-top: 5px;
+    }
+    .balance img { 
+    width: 95px; 
+    height: 56px; 
+    margin-top: -20px; 
+    }
+    .chart-container {
+      background: #F1FCF6;
+      padding: 2px; 
+      width: 98%;
+      height: 177px; 
+      border-radius: 6px;
+    }
+    .scroll-container {
+      overflow-x: auto;
+      width: 100%;
+      height: 300px;
+      padding-bottom: 10px;
+    }
+
+    .scroll-container canvas {
+      height: 300px !important;
+      min-width: 600px; /* force scroll */
+    }
+
+    .total-spend {
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      margin-top: 10px; 
+      font-size: 14px;
+      border-bottom: 1px solid #51DE9A; 
+      padding-bottom: 3px;
+    }
+    .spend-label { font-weight: bold; 
+      margin-left: 182px; 
+      font-size: 15px; 
+    }
+    .spend-amount {
+      background: #51DE9A; 
+      color: white; 
+      font-weight: 800;
+      padding: 7px 19px; 
+      border-radius: 7px; 
+      font-size: 15px;
+    }
+    h3 { text-align: left; 
+      margin-top: 1px; 
+      font-weight: 800; 
+      font-size: 25px; 
+      margin-bottom: 8px; 
+    }
+    
+    .details-and-amount {
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between;
+      flex: 1; 
+      position: relative;
+    }
+    .details-and-amount::before {
+      content: ""; 
+      position: absolute; 
+      left: 65%;
+      top: 10%; 
+      bottom: 10%;
+      width: 1px; 
+      background: #51DE9A; 
+      border-radius: 2px;
+    }
+    .details { 
+      flex-grow: 1; 
+      text-align: left; 
+    }
+    .details p { 
+      margin: 0; 
+      font-size: 20px; 
+      font-weight: bold; 
+    }
+    .details span {
+      font-size: 15px; 
+      color: #51DE9A;
+      font-weight: 300; 
+      margin-left: 13px;
+    }
+    .amount {
+     color: #51DE9A; 
+     font-size: 18px; 
+     font-weight: bold; 
+    }
+    
+
+    .transaction-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .transaction-left img {
+      width: 45px;
+      height: 45px;
+    }
+
+    .transaction-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .transaction-info .label {
+      font-weight: 600;
+      font-size: 17px;
+      text-transform: none;
+    }
+
+    .transaction-info .meta {
+      font-size: 13px;
+      color: #51DE9A;
+      font-weight: 500;
+    }
+
+    .transaction-amount {
+      font-weight: bold;
+      font-size: 18px;
+      color: #51DE9A;
+    }
+    .transactions {
+      background: white;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      border-radius: 10px;
+    }
+
+    .transaction {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #F1FCF6;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 8px 0;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-around;
+      background: #F1FCF6;
+      border: 2px solid #66D2CE;
+      padding: 15px 20px;
+      border-radius: 30px 30px 0 0; /* Round the top corners only */
+      margin-bottom: -10px;
+      margin-left: -9px;
+      width: 376px;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+      gap: 36px; 
+        }
+
+        .footer img{
+            max-width: 28px;
+            max-height: 28px;
+            margin-bottom: 3px;
+            margin-right: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .footer img:hover{
+            background-color: #51DE9A ;
+            border-radius: 4px;
+        }
+        
+        .menu-icon-wrapper {
+            position: relative;
+        }
+
+        .popup-menu {
+            position: absolute;
+            bottom: 40px;
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Shift back by 50% of its width */
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .menu-btn img {
+            padding: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .menu-btn img:hover {
+            background: #51DE9A;
+            color: white;
+        }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Analysis</h1>
+    <div class="tabs">
+      <button class="active">Daily</button>
+      <button>Weekly</button>
+      <button>Monthly</button>
+    </div>
+    <div class="balance">
+      <div><span>Balance:</span><p>₱ 0.00</p></div>
+      <img src="money.png" alt="Money" />
+    </div>
+    <div class="scroll-container">
+  <canvas id="barChart"></canvas>
+</div>
+    <div class="total-spend">
+      <p class="spend-label">Total spend:</p>
+      <span class="spend-amount">₱ 0.00</span>
+    </div>
+    <div class="transactions" id="transactions-list">
+    <h3>Transactions:</h3>
+    <!-- Transactions will be added here -->
+     </div>
+    <!-- FOOTER NAVIGATION -->
+      <div class="footer">
+        <a href="homepage.html"><img src="home.png" alt="Home"></a>
+        <a href="analysis.html"><img src="analysis.png" alt="Analysis"></a>
+        <a href="list.html"><img src="list.png" alt="List"></a>
+        <div class="menu-icon-wrapper">
+          <img src="menu.png" alt="menu record" class="menu-btn">
+          <div class="popup-menu">
+            <img src="manual record.png" alt="Manual" class="menu-btn">
+            <img src="scanner.png" alt="Scanner" class="menu-btn">
+          </div>
+        </div>
+        <img src="profile.png" alt="Profile">
+      </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabase = createClient(
+      "https://bwpzqbaemdcwwnreafgt.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc"
+    );
+
+    const tabs = document.querySelectorAll('.tabs button');
+    let currentRange = 'daily';
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentRange = tab.textContent.toLowerCase();
+        loadExpensesByRange(currentRange);
+      });
+    });
+
+    async function loadExpensesByRange(range) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) return window.location.href = "/login.html";
+      const user = session.user;
+
+      let fromDate = new Date();
+      if (range === 'weekly') fromDate.setDate(fromDate.getDate() - 6);
+      if (range === 'monthly') fromDate.setDate(fromDate.getDate() - 29);
+      fromDate.setHours(0, 0, 0, 0);
+
+      const { data: expenses, error } = await supabase
+        .from('expenses')
+        .select('id, amount, date, created_at, user_id, icon_url, description, source')
+        .eq('user_id', user.id)
+        .gte('created_at', fromDate.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) return console.error('Error loading expenses:', error);
+
+      // 1. Calculate total expenses
+let total = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+// 2. Display total spend only
+document.querySelector('.spend-amount').textContent = `₱ ${total.toFixed(2)}`;
+
+// 3. Fetch budget and calculate balance
+const { data: budgetData, error: budgetError } = await supabase
+  .from('budgets')
+  .select('monthly_limit')
+  .eq('user_id', user.id)
+  .single();
+
+if (budgetError) {
+  console.error('Error fetching budget:', budgetError.message);
+  document.querySelector('.balance p').textContent = '₱ 0.00';
+} else {
+  const monthlyBudget = budgetData?.monthly_limit || 0;
+  const remainingBalance = monthlyBudget - total;
+
+  // 4. Display remaining balance
+  document.querySelector('.balance p').textContent = `₱ ${remainingBalance.toFixed(2)}`;
+}
+
+      document.querySelectorAll('.transaction').forEach(el => el.remove());
+
+        const list = document.getElementById('transactions-list');
+
+        // Clear existing items except <h3>
+        list.querySelectorAll('.transaction').forEach(el => el.remove());
+
+        expenses.forEach(e => {
+          const date = new Date(e.created_at);
+          const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          const div = document.createElement('div');
+          div.className = 'transaction';
+          div.innerHTML = `
+            <div class="transaction-left">
+              <img src="${e.icon_url || 'default-icon.png'}" alt="icon" />
+              <div class="transaction-info">
+                <span class="label">${e.description || 'No Description'}</span>
+                <span class="meta">${e.source || 'Unknown Source'} - ${e.date}</span>
+              </div>
+            </div>
+            <div class="transaction-amount">₱${e.amount.toFixed(2)}</div>
+          `;
+          list.appendChild(div);
+        });
+      /* -------- Bar-Chart Logic  --------------------------------------------- */
+          const labels  = [];
+          const dataMap = Object.create(null);   // ↓ tiny perf win over {}
+
+          const now = new Date();
+
+          /* 1️⃣  DAILY – last 24 h, hour-by-hour ---------------------------------- */
+          if (range === 'daily') {
+            // Build 24 labels, starting 23 h ago up to “now”
+            for (let i = 23; i >= 0; i--) {
+              const d = new Date(now);
+              d.setHours(now.getHours() - i, 0, 0, 0);
+              const label = d.getHours().toString().padStart(2, '0') + ':00';
+              labels.push(label);
+              dataMap[label] = 0;
+            }
+
+            expenses.forEach(e => {
+              const d = new Date(e.created_at);
+              if (now - d <= 86_400_000) {                 // 24 h in ms
+                const label = d.getHours().toString().padStart(2, '0') + ':00';
+                if (label in dataMap) dataMap[label] += e.amount;
+              }
+            });
+
+          /* 2️⃣  WEEKLY – last 7 days, day-by-day --------------------------------- */
+          } else if (range === 'weekly') {
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+            for (let i = 6; i >= 0; i--) {
+              const d = new Date(now);
+              d.setDate(now.getDate() - i);          // go back i days
+              const label = dayNames[d.getDay()];
+              labels.push(label);
+              dataMap[label] = 0;
+            }
+
+            expenses.forEach(e => {
+              const d = new Date(e.created_at);
+              if (now - d <= 6 * 86_400_000) {       // 7 × 24 h
+                const label = dayNames[d.getDay()];
+                if (label in dataMap) dataMap[label] += e.amount;
+              }
+            });
+
+          /* 3️⃣  MONTHLY – current month, day-of-month ---------------------------- */
+          } else if (range === 'monthly') {
+            const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const todayInMonth = now.getDate();      // 1 … 31
+
+            for (let i = 1; i <= todayInMonth; i++) {
+              const label = i.toString();            // "1", "2", …
+              labels.push(label);
+              dataMap[label] = 0;
+            }
+
+            expenses.forEach(e => {
+              const d = new Date(e.created_at);
+              if (d >= firstOfMonth &&
+                  d.getMonth() === now.getMonth() &&
+                  d.getFullYear() === now.getFullYear()) {
+                const label = d.getDate().toString();
+                dataMap[label] += e.amount;
+              }
+            });
+          }
+
+          /* Turn the map into the array Chart.js expects --------------------------- */
+          const dataPoints = labels.map(l => dataMap[l] ?? 0);
+
+
+                if (window.barChartInstance) window.barChartInstance.destroy();
+                const canvas = document.getElementById('barChart');
+
+                /// Dynamically widen canvas only for weekly/monthly
+                if (range === 'weekly') {
+                  canvas.width = labels.length * 100; // e.g. 7 * 100 = 700px
+                } else if (range === 'monthly') {
+                  canvas.width = labels.length * 30;
+                } else {
+                  canvas.width = labels.length * 40;
+                }
+
+
+                const ctx = canvas.getContext('2d');
+                if (window.barChartInstance) {
+                  window.barChartInstance.destroy(); // Clean up previous chart
+                }
+
+                const maxExpense = Math.max(...dataPoints);
+          const threshold = maxExpense * 0.5; // You can adjust this threshold as needed
+
+          const barColors = dataPoints.map(value => value >= threshold ? '#E82561' : '#2DAA9E');
+
+          window.barChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Spending (₱)',
+                data: dataPoints,
+                backgroundColor: barColors, // dynamic color per bar
+                borderRadius: 10,
+                barThickness: 13,
+              }]
+            },
+            options: {
+              responsive: false,
+              maintainAspectRatio: false,
+              scales: {
+                x: { 
+                  ticks: { font: { size: 13 } },
+                  grid: { drawBorder: false }
+                },
+                y: {
+                  min: 0,
+                  ticks: {
+                    font: { size: 13 },
+                    callback: v => `₱ ${v}`
+                  },
+                  grid: { drawBorder: false }
+                }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+
+          }
+
+          loadExpensesByRange(currentRange);
+          // Popup menu toggle code
+          const menuIconWrapper = document.querySelector(".menu-icon-wrapper");
+          const popupMenu = menuIconWrapper.querySelector(".popup-menu");
+          const menuBtn = menuIconWrapper.querySelector(".menu-btn");
+
+          menuBtn.addEventListener("click", (e) => {
+            e.stopPropagation(); // prevent document click handler immediately hiding
+            if (popupMenu.style.display === "block") {
+              popupMenu.style.display = "none";
+            } else {
+              popupMenu.style.display = "block";
+            }
+          });
+
+          // Close popup when clicking outside
+          document.addEventListener("click", (event) => {
+            if (!menuIconWrapper.contains(event.target)) {
+              popupMenu.style.display = "none";
+            }
+          });
+      const manualIcon = document.querySelector('img[alt="Manual"]');
+      if (manualIcon) {
+        manualIcon.addEventListener('click', function() {
+          window.location.href = "manual.html"; // Redirects to manual.html
+        });
+      }
+
+      // Link to scan.html when clicking the "Scanner" icon
+      const scannerIcon = document.querySelector('img[alt="Scanner"]');
+      if (scannerIcon) {
+        scannerIcon.addEventListener('click', function() {
+          window.location.href = "scan.html"; // Redirects to scan.html
+        });
+        
+      }
+    </script>
+  </body>
+</html>

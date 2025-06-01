@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt Scanner</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,Arial,sans-serif;
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+      background:#fff;
+      padding-bottom:66px;
+    }
+    h3{margin:1.2rem 0 .6rem 5%;text-align:left}
+    .top-bar{
+      position:sticky;top:0;z-index:10;
+      background:#47c9c2;color:#fff;font-weight:600;
+      font-size:1.25rem;text-align:center;padding:.9rem 0;
+    }
+    .top-bar .back{
+      position:absolute;left:1rem;top:50%;
+      transform:translateY(-50%);font-size:1.6rem;cursor:pointer;
+    }
+    main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+    .scanner-frame{
+      width:280px;height:280px;position:relative;overflow:hidden;margin-top:1.2rem;
+    }
+    .scanner-frame::before,.scanner-frame::after{
+      content:'';position:absolute;width:44px;height:44px;border:5px solid #47c9c2;pointer-events:none}
+    .scanner-frame::before{left:0;top:0;border-right:none;border-bottom:none}
+    .scanner-frame::after{right:0;bottom:0;border-left:none;border-top:none}
+    video,img{
+      width:100%;height:100%;object-fit:cover;border-radius:0}
+    img{display:none}
+    .capture-btn,.action-btn{
+      background:#47c9c2;color:#fff;border:none;border-radius:999px;
+      padding:.8rem 2rem;font-size:1rem;font-weight:600;cursor:pointer;
+      box-shadow:0 4px 8px rgba(0,0,0,.15)
+    }
+    .capture-btn{margin:1.8rem 0}
+    .action-row{display:none;gap:1.2rem;margin:1.8rem 0}
+    .action-btn{border-radius:10px}
+    #totalAmountCard{
+      background:#8ee8e4;color:#000;padding:1rem;
+      border-radius:12px;width:90%;max-width:330px;margin:1rem auto;font-size:1.05rem;line-height:1.4
+    }
+    #totalAmount{font-size:1.9rem;font-weight:800}
+    table{
+      width:90%;margin:0 auto 2rem;border-collapse:collapse;background:#fff
+    }
+    th,td{border:1px solid #47c9c2;padding:.45rem .4rem;font-size:.9rem}
+    th{background:#d8f6f4;font-weight:700}
+    td:nth-child(4),th:nth-child(4){text-align:right}
+    td:nth-child(1){text-align:center;width:36px}
+    #loader{display:none;margin-top:.8rem}
+  </style>
+</head>
+<div class="top-bar"><span class="back" onclick="history.back()">&#8592;</span>Scanner</div>
+<main>
+  <div id="scannerView">
+    <div class="scanner-frame">
+      <video id="video" autoplay playsinline></video>
+    </div>
+    <button id="capture" class="capture-btn">Scan Receipt</button>
+  </div>
+
+  <div id="previewView" style="display:none">
+    <div class="scanner-frame">
+      <img id="snapshot" alt="Snapshot">
+    </div>
+    <div class="action-row" id="actions">
+      <button class="action-btn" onclick="retake()">Retake</button>
+      <button class="action-btn" onclick="proceed()">Proceed</button>
+    </div>
+    <div id="loader">🔍 Processing…</div>
+  </div>
+
+  <div id="summaryView" style="display:none">
+    <div id="totalAmountCard">Total Expenses:<br><span id="totalAmount">₱0.00</span></div>
+    <h3>Receipt List:</h3>
+    <table>
+      <thead><tr><th>No.</th><th>Name</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead>
+      <tbody id="receiptTable"></tbody>
+    </table>
+  </div>
+</main>
+
+<canvas id="canvas" style="display:none"></canvas>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const supabase = createClient(
+  "https://bwpzqbaemdcwwnreafgt.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc"
+);
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const capture = document.getElementById('capture');
+const snapshotImg = document.getElementById('snapshot');
+const actions = document.getElementById('actions');
+const loader = document.getElementById('loader');
+const receiptTable = document.getElementById('receiptTable');
+const totalEl = document.getElementById('totalAmount');
+
+let dataUrl = '';
+let items = [];
+let currentReceiptId = null;
+let USER_ID = null;
+
+// 1. Authenticate and get user ID
+const { data: { user }, error: authError } = await supabase.auth.getUser();
+if (authError || !user) {
+  alert('User not authenticated');
+  throw new Error('Authentication failed');
+}
+USER_ID = user.id;
+
+// Start camera
+navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+  .then(stream => video.srcObject = stream)
+  .catch(err => alert('Camera error: ' + err.message));
+
+capture.addEventListener('click', async () => {
+  const rawW = video.videoWidth;
+  const rawH = video.videoHeight;
+  const size = Math.min(rawW, rawH);
+  const cropX = (rawW - size) / 2;
+  const cropY = (rawH - size) / 2;
+
+  canvas.width = size;
+  canvas.height = size;
+  ctx.drawImage(video, cropX, cropY, size, size, 0, 0, size, size);
+  dataUrl = canvas.toDataURL('image/png');
+  snapshotImg.src = dataUrl;
+
+  document.getElementById('scannerView').style.display = 'none';
+  document.getElementById('previewView').style.display = 'block';
+  snapshotImg.style.display = 'block';
+  actions.style.display = 'flex';
+
+  // Insert receipt record
+  const { data: receiptData, error: receiptError } = await supabase
+    .from('receipts')
+    .insert({
+      user_id: USER_ID,
+      image_url: dataUrl
+    })
+    .select('id')
+    .single();
+
+  if (receiptError || !receiptData?.id) {
+    alert('Error saving receipt. Please try again.');
+    retake();
+    return;
+  }
+
+  currentReceiptId = receiptData.id;
+});
+
+window.retake = () => {
+  document.getElementById('previewView').style.display = 'none';
+  document.getElementById('scannerView').style.display = 'block';
+  loader.style.display = 'none';
+  items = [];
+  currentReceiptId = null;
+  totalEl.textContent = '₱0.00';
+  receiptTable.innerHTML = '';
+};
+
+window.proceed = async () => {
+  actions.style.display = 'none';
+  loader.style.display = 'block';
+
+  if (!currentReceiptId) {
+    alert('No receipt found.');
+    retake();
+    return;
+  }
+
+  const { data: { text } } = await Tesseract.recognize(dataUrl, 'eng');
+  items = parse(text);
+
+  let totalAmount = 0;
+  const today = new Date().toISOString().split('T')[0];
+
+  if (items.length > 0) {
+  let totalAmount = 0;
+  const today = new Date().toISOString().split('T')[0];
+
+  // Helper to get category_id from category name
+  async function getCategoryId(categoryName) {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', categoryName)
+      .single();
+
+    if (error || !data) {
+      console.warn(`Category "${categoryName}" not found, using null`);
+      return null;
+    }
+    return data.id;
+  }
+
+  // Map items to include category_id, assuming items have category property or default to 'Uncategorized'
+  const expensesToInsert = [];
+
+  for (const item of items) {
+    // Example: assign category names here or use a default
+    const categoryName = item.category || 'Uncategorized';
+    const category_id = await getCategoryId(categoryName);
+
+    totalAmount += item.amount;
+
+    expensesToInsert.push({
+      user_id: USER_ID,
+      description: item.name,
+      amount: item.amount,
+      date: today,
+      source: 'Scanned Receipt',
+      receipt_id: currentReceiptId,
+      category_id
+    });
+  }
+
+  const { error: expError } = await supabase
+    .from('expenses')
+    .insert(expensesToInsert);
+
+  if (expError) {
+    console.error('Error inserting expenses:', expError.message);
+    alert('Failed to save expenses.');
+  } else {
+    await supabase
+      .from('receipts')
+      .update({ total_amount: totalAmount })
+      .eq('id', currentReceiptId);
+  }
+} else {
+  alert('No readable items found.');
+}
+
+renderSummary(totalAmount);
+document.getElementById('previewView').style.display = 'none';
+document.getElementById('summaryView').style.display = 'block';
+loader.style.display = 'none';
+};
+
+function parse(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const rex = /(.+?)\s+([\d\.,]+)$/;
+  return lines.reduce((arr, l) => {
+    const m = l.match(rex);
+    if (m) {
+      const amt = parseFloat(m[2].replace(/,/g, ''));
+      if (!isNaN(amt)) {
+        arr.push({ name: m[1].trim(), amount: amt });
+      }
+    }
+    return arr;
+  }, []);
+}
+
+function renderSummary(total) {
+  receiptTable.innerHTML = '';
+  items.forEach((item, i) => {
+    receiptTable.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${i + 1}.</td>
+        <td>${item.name}</td>
+        <td></td>
+        <td>₱${item.amount.toFixed(2)}</td>
+        <td>${new Date().toLocaleDateString()}</td>
+      </tr>
+    `);
+  });
+  totalEl.textContent = `₱${total.toFixed(2)}`;
+}
+</script>
+</body>
+</html>

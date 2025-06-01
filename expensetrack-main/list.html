@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scan List</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: #fff;
+            padding-bottom: 66px;
+        }
+        h3 {
+            margin: 1.2rem 0 .6rem 5%;
+            text-align: left;
+        }
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #47c9c2;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.25rem;
+            text-align: center;
+            padding: .9rem 0;
+        }
+        .top-bar .back {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.6rem;
+            cursor: pointer;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        #totalAmountCard {
+            background: #8ee8e4;
+            color: #000;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 330px;
+            margin: 1rem auto;
+            font-size: 1.05rem;
+            line-height: 1.4;
+        }
+        #totalAmount {
+            font-size: 1.9rem;
+            font-weight: 800;
+        }
+        table {
+            width: 90%;
+            margin: 0 auto 2rem;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #47c9c2;
+            padding: .45rem .4rem;
+            font-size: .9rem;
+        }
+        th {
+            background: #d8f6f4;
+            font-weight: 700;
+        }
+        td:nth-child(4), th:nth-child(4) {
+            text-align: right;
+        }
+        td:nth-child(1) {
+            text-align: center;
+            width: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar"><span class="back" onclick="history.back()">&#8592;</span>Scan List</div>
+    <main>
+        <div id="summaryView">
+            <div id="totalAmountCard">Total Expenses:<br><span id="totalAmount">₱0.00</span></div>
+            <h3>All Records (Scanned + Manual):</h3>
+            <table>
+                <thead>
+                    <tr><th>No.</th><th>Name</th><th>Category</th><th>Amount</th><th>Date</th></tr>
+                </thead>
+                <tbody id="receiptTable"></tbody>
+            </table>
+        </div>
+    </main>
+    
+<script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
+        "https://bwpzqbaemdcwwnreafgt.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc"
+    );
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+            alert("User not logged in.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        const userId = user.id;
+        const receiptTable = document.getElementById('receiptTable');
+        const totalEl = document.getElementById('totalAmount');
+
+        const [manualRes, scannedRes] = await Promise.all([
+            supabase
+                .from('expenses')
+                .select(`description, amount, date, categories(name)`)
+                .eq('user_id', userId),
+
+            // Corrected this to 'receipts'
+            supabase
+                .from('receipts')
+                .select('description, amount, date, category_name') // Select relevant columns
+                .eq('user_id', userId)
+        ]);
+
+        const manual = (manualRes.data || []).map(e => ({
+            name: e.description || 'Manual',
+            category: e.categories?.name || 'Uncategorized', // Ensure category is handled
+            amount: parseFloat(e.amount), // Convert amount to float
+            date: e.date,
+        }));
+
+        const scanned = (scannedRes.data || []).map(e => ({
+            name: e.description || 'Scanned', // Assuming 'description' in 'receipts' table is the item name
+            category: e.category_name || 'Uncategorized', // Using 'category_name' from 'receipts'
+            amount: parseFloat(e.amount), // Convert amount to float
+            date: e.date, // Using 'date' from 'receipts'
+        }));
+
+        const combined = [...manual, ...scanned].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let total = 0;
+        receiptTable.innerHTML = '';
+
+        if (combined.length === 0) {
+            receiptTable.innerHTML = '<tr><td colspan="5">No records found.</td></tr>';
+            totalEl.textContent = '₱0.00';
+            return;
+        }
+
+        combined.forEach((entry, index) => {
+            total += entry.amount;
+            receiptTable.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.category}</td>
+                    <td>₱${entry.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td>${new Date(entry.date).toLocaleDateString()}</td>
+                </tr>
+            `);
+        });
+
+        totalEl.textContent = `₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    });
+</script>
+</body>
+</html>

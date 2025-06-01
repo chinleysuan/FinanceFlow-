@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications</title>
+  <style>
+    body {
+      background-color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      border: 1px solid black;
+      border-radius: 1rem;
+      padding: 1rem;
+      min-height: 500px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .close-btn {
+      font-size: 1.5rem;
+      color: #6b7280;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .notifications-list-container {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+
+    .notifications {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .notification {
+      background-color: #f3f4f6;
+      padding: 0.75rem;
+      border-left: 4px solid;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .date {
+      display: block;
+      font-size: 0.75rem;
+      color: black;
+      margin-top: 0.25rem;
+      text-align: right;
+    }
+
+    .border-warning { border-color: #F8B300; }
+    .border-error { border-color: #F04438; }
+    .border-success { border-color: #12B76A; }
+    .border-info { border-color: #2E90FA; }
+    .border-default { border-color: #66D2CE; }
+
+    #loadingMessage, #noNotificationsMessage {
+      text-align: center;
+      padding: 20px;
+      color: #555;
+      font-style: italic;
+    }
+    #noNotificationsMessage { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Notifications</h1>
+      <button class="close-btn" onclick="history.back()">&times;</button>
+    </div>
+
+    <div class="notifications-list-container">
+      <p id="loadingMessage">Loading notifications...</p>
+      <p id="noNotificationsMessage">No new notifications.</p>
+      <div class="notifications" id="notificationsContainer"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
+      "https://bwpzqbaemdcwwnreafgt.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc"
+    );
+
+    const notificationsContainer = document.getElementById('notificationsContainer');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const noNotificationsMessage = document.getElementById('noNotificationsMessage');
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        alert("You need to be logged in to view notifications.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userId = user.id;
+
+      async function storeNotificationIfNew(message, type) {
+        const { data: existing } = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('message', message)
+          .limit(1);
+
+        if (!existing || existing.length === 0) {
+          await supabase.from('notifications').insert([
+            {
+              user_id: userId,
+              message,
+              type
+            }
+          ]);
+        }
+      }
+
+      loadingMessage.style.display = 'block';
+      notificationsContainer.innerHTML = '';
+
+      const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+      const startDateISO = startOfMonth.toISOString().split('T')[0];
+      const endDateISO = endOfMonth.toISOString().split('T')[0];
+
+      const [notificationsRes, budgetsRes, expensesRes, receiptsRes] = await Promise.all([
+        supabase.from('notifications').select('*').eq('user_id', userId),
+        supabase.from('budgets').select('monthly_limit').eq('user_id', userId).single(),
+        supabase.from('expenses').select('amount, date').eq('user_id', userId).gte('date', startDateISO).lte('date', endDateISO),
+        supabase.from('receipts').select('amount, date').eq('user_id', userId).gte('date', startDateISO).lte('date', endDateISO)
+      ]);
+
+      loadingMessage.style.display = 'none';
+      let allNotifications = [];
+
+      if (!notificationsRes.error) {
+        allNotifications = notificationsRes.data || [];
+      }
+
+      let monthlyLimit = 0;
+      if (!budgetsRes.error && budgetsRes.data) {
+        monthlyLimit = parseFloat(budgetsRes.data.monthly_limit || 0);
+      }
+
+      let totalMonthlySpending = 0;
+      if (!expensesRes.error) {
+        totalMonthlySpending += (expensesRes.data || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+      }
+      if (!receiptsRes.error) {
+        totalMonthlySpending += (receiptsRes.data || []).reduce((sum, r) => sum + parseFloat(r.amount || 0), 0);
+      }
+
+      if (monthlyLimit > 0) {
+        const spendingPercentage = (totalMonthlySpending / monthlyLimit) * 100;
+        const remainingBudget = monthlyLimit - totalMonthlySpending;
+
+        const infoMsg = `📊 Your monthly budget limit is ₱${monthlyLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}.`;
+        allNotifications.push({ message: infoMsg, type: 'info', created_at: new Date().toISOString() });
+        await storeNotificationIfNew(infoMsg, 'info');
+
+        if (remainingBudget < 0) {
+          const errorMsg = `🔴 You've exceeded your monthly budget by ₱${Math.abs(remainingBudget).toLocaleString(undefined, { minimumFractionDigits: 2 })}!`;
+          allNotifications.push({ message: errorMsg, type: 'error', created_at: new Date().toISOString() });
+          await storeNotificationIfNew(errorMsg, 'error');
+        } else if (spendingPercentage >= 95) {
+          const warningMsg = `⚠️ You've spent ${spendingPercentage.toFixed(0)}% of your monthly budget (₱${totalMonthlySpending.toLocaleString(undefined, { minimumFractionDigits: 2 })} of ₱${monthlyLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}).`;
+          allNotifications.push({ message: warningMsg, type: 'warning', created_at: new Date().toISOString() });
+          await storeNotificationIfNew(warningMsg, 'warning');
+        } else if (spendingPercentage >= 80) {
+          const warnMsg = `🔶 You've spent ${spendingPercentage.toFixed(0)}% of your monthly budget. Keep an eye on your spending!`;
+          allNotifications.push({ message: warnMsg, type: 'warning', created_at: new Date().toISOString() });
+          await storeNotificationIfNew(warnMsg, 'warning');
+        } else if (totalMonthlySpending > 0) {
+          const successMsg = `✅ You've spent ₱${totalMonthlySpending.toLocaleString(undefined, { minimumFractionDigits: 2 })} this month, well within your budget.`;
+          allNotifications.push({ message: successMsg, type: 'success', created_at: new Date().toISOString() });
+          await storeNotificationIfNew(successMsg, 'success');
+        }
+      } else {
+        const setupMsg = "ℹ️ No monthly budget set. Consider setting one to track your spending!";
+        allNotifications.push({ message: setupMsg, type: 'info', created_at: new Date().toISOString() });
+        await storeNotificationIfNew(setupMsg, 'info');
+      }
+
+      allNotifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (allNotifications.length === 0) {
+        noNotificationsMessage.style.display = 'block';
+      } else {
+        allNotifications.forEach(notification => {
+          const date = new Date(notification.created_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
+          let borderColorClass = 'border-default';
+
+          switch (notification.type) {
+            case 'warning': borderColorClass = 'border-warning'; break;
+            case 'error': borderColorClass = 'border-error'; break;
+            case 'success': borderColorClass = 'border-success'; break;
+            case 'info': borderColorClass = 'border-info'; break;
+          }
+
+          notificationsContainer.insertAdjacentHTML('beforeend', `
+            <div class="notification ${borderColorClass}">
+              <p>${notification.message}</p>
+              <span class="date">${date}</span>
+            </div>
+          `);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

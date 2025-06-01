@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weekly</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin: 30px auto;
+    }
+
+    h1 {
+      background-color: #66D2CE;
+      font-weight: bold;
+      margin: -12px;
+      padding: 6px 0;
+      color: black;
+      text-align: center;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      background: #66D2CE;
+      border-radius: 10px;
+      padding: 5px;
+      margin-top: 23px;
+    }
+
+    .tabs button {
+      background: none;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 20px;
+      flex: 1;
+    }
+
+    .tabs .active {
+      background: #51DE9A;
+      color: black;
+      border-radius: 8px;
+    }
+
+    .balance {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 16px;
+      margin: 17px 0 0px;
+    }
+
+    .balance span {
+      margin-right: 66px;
+      margin-left: 8px;
+    }
+
+    .balance p {
+      margin-left: 20px;
+      font-weight: 800;
+      margin-top: 5px;
+    }
+
+    .balance img {
+      width: 95px;
+      height: 56px;
+      margin-top: -20px;
+    }
+
+    .chart-container {
+      background: #F1FCF6;
+      padding: 10px;
+      width: 100%;
+      height: 199px;
+      box-sizing: border-box;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .total-spend {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 14px;
+      border-bottom: 1px solid #51DE9A;
+      padding-bottom: 3px;
+    }
+
+    .spend-amount {
+      background: #51DE9A;
+      color: white;
+      font-weight: bold;
+      padding: 5px 12px;
+      border-radius: 7px;
+      font-size: 20px;
+    }
+
+    .spend-label {
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 9px;
+      margin-left: 179px;
+    }
+
+    h3 {
+      text-align: left;
+      margin-top: 15px;
+      font-weight: 800;
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    .transactions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .transaction {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      gap: 10px;
+    }
+
+    .transaction img {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+    }
+
+    .details-and-amount {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: 1;
+      position: relative;
+    }
+
+    .details-and-amount::before {
+      content: "";
+      position: absolute;
+      left: 65%;
+      top: 10%;
+      bottom: 10%;
+      width: 1px;
+      background-color: #51DE9A;
+      border-radius: 2px;
+    }
+
+    .details {
+      flex-grow: 1;
+    }
+
+    .details p {
+      margin: 0;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .details span {
+      color: #51DE9A;
+      font-size: 15px;
+      font-weight: 300;
+      margin-left: 13px;
+    }
+
+    .amount {
+      color: #51DE9A;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      background: #f0fff4;
+      padding: 10px;
+      border: 2px solid lightblue;
+      border-radius: 12px;
+      width: 400px;
+      margin: 15px auto 0;
+      margin-left: -12px;
+      margin-bottom: -12px;
+    }
+
+    .nav-item img {
+      width: 30px;
+      height: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Analysis</h1>
+
+    <div class="tabs">
+      <button>Daily</button>
+      <button class="active">Weekly</button>
+      <button>Monthly</button>
+    </div>
+
+    <div class="balance">
+      <div>
+        <span>Balance:</span>
+        <p>₱ 40,330.00</p>
+      </div>
+      <img src="money.png" alt="Money" />
+    </div>
+
+    <div class="chart-container">
+      <canvas id="weeklyChart"></canvas>
+    </div>
+
+    <div class="total-spend">
+      <p class="spend-label">Total spend:</p>
+      <span class="spend-amount">₱ 1,956.00</span>
+    </div>
+
+    <h3>Transactions:</h3>
+    <div class="transactions">
+      <div class="transaction">
+        <img src="personal.jpeg" alt="Personal" />
+        <div class="details-and-amount">
+          <div class="details">
+            <p>Personal Care</p>
+            <span>12:00 - Jan 29</span>
+          </div>
+          <p class="amount">₱ 889.00</p>
+        </div>
+      </div>
+
+      <div class="transaction">
+        <img src="food.jpeg" alt="Food" />
+        <div class="details-and-amount">
+          <div class="details">
+            <p>Food</p>
+            <span>5:05 - Jan 22</span>
+          </div>
+          <p class="amount">₱ 760.00</p>
+        </div>
+      </div>
+
+      <div class="transaction">
+        <img src="car.jpeg" alt="Transportation" />
+        <div class="details-and-amount">
+          <div class="details">
+            <p>Transportation</p>
+            <span>8:32 - Jan 21</span>
+          </div>
+          <p class="amount">₱ 310.00</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="navbar">
+      <div class="nav-item"><img src="home_icon.png" alt="Home"></div>
+      <div class="nav-item"><img src="analysis_icon.png" alt="Chart"></div>
+      <div class="nav-item"><img src="scan_icon.jpeg" alt="Scan"></div>
+      <div class="nav-item"><img src="manual_icon.png" alt="List"></div>
+      <div class="nav-item"><img src="profile_icon.jpeg" alt="Profile"></div>
+    </div>
+  </div>
+
+  <script>
+    var ctx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.', 'Sun.'],
+        datasets: [{
+          label: 'Spending (₱)',
+          data: [6000, 8000, 2400, 1200, 1000, 5000, 9000],
+          backgroundColor: [
+            '#E82561', '#E82561', '#2DAA9E', '#2DAA9E', '#E82561', '#E82561', '#2DAA9E'
+          ],
+          borderRadius: 10,
+          barThickness: 13,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: {
+              font: { size: 13 },
+            }
+          },
+          y: {
+            min: 500,
+            max: 10000,
+            ticks: {
+              stepSize: 1000,
+              callback: (value) => '₱ ' + value.toLocaleString(),
+              font: { size: 13 }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Khula:wght@300;400;600;700;800&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Lato", sans-serif;
+        }
+
+        body {
+            background-color: #F5F5F5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-wrapper {
+            background-color: #66D2CE;
+            width: 100%;
+            max-width: 430px;
+            margin: auto;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #66D2CE;
+            padding: 15px;
+            margin: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .icons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header img {
+            width: 24px;
+            height: auto;
+        }
+
+        .expenses {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px auto;
+  width: 250px;
+  background: #fff;
+  padding: 4px 8px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+  flex: 1;
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 35%;
+  background: black;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.total-label {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: bold;
+  color: black;
+  text-align: right;
+  width: 80px;
+}
+
+
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: bolder;
+            margin-bottom: 15px;
+        }
+
+        .check-icon {
+            width: 30px;
+            height: auto;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            justify-content: center;
+            background-color: white;
+            border-radius: 60px 60px 0 0;
+            padding: 40px 20px;
+            margin: 0 auto;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .box1 img, .box2 img, .row img {
+            width: 40px;
+            height: 50px;
+            margin-right: 10px;
+        }
+        .box1 p {
+    margin: 0; /* Remove default paragraph margins */
+    font-weight: bold; /* Make "Balance:" bold */
+}
+.box1 > div {
+    display: flex;
+    margin-top: -40px;/* Enable flexbox for image and paragraph */
+    align-items: center; /* Vertically align image and paragraph */
+}
+
+.box1 h3 {
+
+    margin-top: -50px;
+    font-size: 23px; /* Slightly larger font for balance */
+    font-weight: bolder;
+}
+        .box1{
+            background-color: #51DE9A;
+            border-radius: 25px;
+            color: white;
+            box-sizing: border-box;
+            padding: 10px;
+            height: 160px;
+            width: 100%;
+            margin-top: 10px;
+            font-size: medium;
+            display: flex; /* Enable flexbox for alignment */
+            flex-direction: column; /* Stack items vertically by default */
+            justify-content: space-around; /* Distribute space evenly */
+            align-items: flex-start; /* Align items to the left */
+        }
+         .box2 {
+            display: flex;
+            background-color: #51DE9A;
+            border-radius: 20px;
+            padding: 15px;
+            color: white;
+            width: 100%;
+            max-width: 360px;
+            justify-content: space-between;
+            align-items: center;
+}
+        
+
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50%;
+            text-align: center;
+        }
+       
+        .progress-circle {
+          font-weight: bold;
+          font-size: 18px;
+          text-align: center;
+          padding: 10px;
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .low { background-color: #ffcccc; color: #a80000; }     /* Red */
+        .medium { background-color: #fff7cc; color: #9f8600; }  /* Yellow */
+        .high { background-color: #ccffd9; color: #007f3f; }    /* Green */
+  
+        .divider {
+            width: 2px;
+            height: 100%;
+            background-color: white;
+            margin: 0 10px;
+        }
+
+        .right-section {
+            flex: 1;
+            text-align: left;
+        }
+
+        .expense {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        hr {
+            border: 0.5px solid white;
+            width: 100%;
+            margin: 5px 0;
+        }
+         .green-line {
+            height: 2px;
+            background-color: #66D2CE;
+        }
+        .white-bottom {
+            background: white;
+            padding: 0px;
+        }
+        .transactions {
+            background: white;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .transaction {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .transaction:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .transaction-icon-wrapper {
+            border-radius: 10px;
+            padding: 10px;
+            margin-left: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .transaction-icon-wrapper img {
+            max-width: 340px;
+            max-height: 50px;
+        }
+
+        .transaction-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .transaction-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #000000;
+            margin-bottom: 2px;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #51DE9A;
+        }
+
+        .transaction-amount {
+            font-weight: bolder;
+            font-size: 20px;
+            color: #51DE9A;
+        }
+        hr.transaction {
+            border: none;
+            border-right: 1px solid #51DE9A;
+            height: 45px;
+            margin: 0 70px;
+            margin-top: -30px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-around;
+            background: #F1FCF6;
+            border: 2px solid #66D2CE;
+            padding: 15px 10px;
+            border-radius: 30px 30px 0 0; /* Round the top corners only */
+            margin-bottom: -10px;
+            width: 430px;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            gap: 30px; 
+        }
+
+        .footer img{
+            max-width: 28px;
+            max-height: 28px;
+            margin-bottom: 3px;
+            margin-right: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .footer img:hover{
+            background-color: #51DE9A ;
+            border-radius: 4px;
+        }
+        
+.menu-icon-wrapper {
+    position: relative;
+}
+
+.popup-menu {
+    position: absolute;
+    bottom: 40px;
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Shift back by 50% of its width */
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+
+.menu-btn img {
+    padding: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.menu-btn img:hover {
+    background: #51DE9A;
+    color: white;
+}
+
+        @media screen and (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                margin: 10px;
+            }
+
+            .progress-container {
+                width: 90%;
+            }
+
+            .container {
+                flex-direction: column;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .box1,
+            .box2 {
+                width: 100%;
+            }
+
+            .footer {
+                flex-wrap: wrap;
+                font-size: 14px;
+            }
+            
+        }
+
+    </style>
+</head>
+<body>
+  <div class="main-wrapper">
+    <!-- HEADER -->
+    <div class="header">
+      <h1>Hello, Welcome</h1>
+      <div class="icons">
+        <a href="notification.html">
+        <img src="notiflogo.png" alt="Notification Icon">
+        </a>
+        <img src="miclogo.png" alt="Microphone Icon">
+      </div>
+    </div>
+
+    <!-- EXPENSES OVERVIEW -->
+    <div class="expenses">
+      <p class="title">Total Expenses</p>
+      <h2 class="amount" id="total-expenses">₱ 0.00</h2>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill">
+            <span class="progress-label" id="progress-percent">0%</span>
+          </div>
+        </div>
+        <input type="text" class="total-label" id="budget-input" value="₱ 0.00" />
+      </div>
+      <div class="status">
+        <img src="check.png" alt="Check Icon" class="check-icon" />
+        <p id="status-text">Loading...</p>
+      </div>
+    </div>
+
+    <!-- BALANCE & GOALS -->
+    <div class="container">
+      <div class="box1">
+        <div>
+          <img src="cash.png" alt="Cash"/>
+          <p>Balance:</p>
+        </div>
+        <h3 id="balance">₱ 0.00</h3>
+      </div>
+
+      <div class="box2">
+        <div class="left-section">
+          <div class="progress-circle" id="savings-circle">0%</div>
+          <p>Savings on Goals</p>
+        </div>
+        <div class="divider"></div>
+        <div class="right-section">
+          <p class="title">Last month:</p>
+          <div class="expense">
+            <img src="cash.png" alt="wallet icon" class="icon" />
+            <span id="last-month">₱ 0.00</span>
+          </div>
+          <hr />
+          <p class="title">Food:</p>
+          <div class="expense">
+            <img src="fork.png" alt="food icon" class="icon" />
+            <span id="food">₱ 0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="green-line"></div>
+    <div class="white-bottom">
+      <div class="transactions" id="transactions-list">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- FOOTER NAVIGATION -->
+      <div class="footer">
+        <a href="homepage.html"><img src="home.png" alt="Home"></a>
+        <a href="analysis.html"><img src="analysis.png" alt="Analysis"></a>
+        <a href="list.html"><img src="list.png" alt="List"></a>
+        <div class="menu-icon-wrapper">
+          <img src="menu.png" alt="menu record" class="menu-btn">
+          <div class="popup-menu">
+            <img src="manual record.png" alt="Manual" class="menu-btn">
+            <img src="scanner.png" alt="Scanner" class="menu-btn">
+          </div>
+        </div>
+        <img src="profile.png" alt="Profile">
+      </div>
+    </div>
+  </div>
+
+ <script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+  const supabase = createClient(
+    "https://bwpzqbaemdcwwnreafgt.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3cHpxYmFlbWRjd3ducmVhZmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODAwNTEsImV4cCI6MjA2Mzc1NjA1MX0.TcKFYp5sD9WG8bmu9WmFp4CI-SP7Al1WnDkPVYJYHGc"
+  );
+  
+  let currentBudget = 0;
+
+async function fetchAndDisplayData() {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user?.id) return alert("No user found. Please log in.");
+
+  /* --------------- budgets table ---------------- */
+  const { data: budgetData, error: budgetErr } = await supabase
+    .from("budgets")
+    .select("monthly_limit")
+    .eq("user_id", user.id)
+    .single();
+
+  if (budgetErr) {
+    console.error("Budget fetch error:", budgetErr.message);
+    return;
+  }
+  currentBudget = budgetData?.monthly_limit || 0;
+
+  /* --------------- expenses table ---------------- */
+  const { data: expenses, error: expErr } = await supabase
+    .from("expenses")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (expErr) {
+    console.error("Expense fetch error:", expErr.message);
+    return;
+  }
+    let total = expenses.reduce((sum, item) => sum + parseFloat(item.amount), 0); // ✅ Sum ALL expenses
+
+const transactionsList = document.getElementById("transactions-list");
+transactionsList.innerHTML = "";
+
+// Display ONLY top 5 in UI
+const topExpenses = expenses
+  .sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount))
+  .slice(0, 5);
+
+topExpenses.forEach((item) => {
+  const transactionHTML = `
+    <div class="transaction">
+      <div class="transaction-info">
+        <div class="transaction-icon-wrapper">
+          <img src="${item.icon_url || "default.png"}" alt="${item.icon_url}" />
+        </div>
+        <div class="transaction-details">
+          <p class="transaction-name">${item.description}</p>
+          <p class="transaction-date">${item.source} - ${item.date}</p>
+          <hr class="transaction">
+        </div>
+      </div>
+      <span class="transaction-amount">₱ ${parseFloat(item.amount).toLocaleString()}</span>
+    </div>
+  `;
+  transactionsList.insertAdjacentHTML("beforeend", transactionHTML);
+});
+const balance = currentBudget - total;
+const percent = currentBudget > 0 ? Math.round((total / currentBudget) * 100) : 0;
+const statusIcon = document.querySelector(".check-icon");   // img
+const statusText = document.getElementById("status-text");  // p
+
+
+document.getElementById("total-expenses").textContent = `₱ ${total.toLocaleString()}`;
+document.getElementById("balance").textContent = `₱ ${balance.toLocaleString()}`;
+document.getElementById("budget-input").value = `₱ ${currentBudget.toLocaleString()}`;
+document.getElementById("progress-percent").textContent = `${percent}%`;
+document.getElementById("progress-fill").style.width = `${Math.min(percent, 100)}%`;
+
+
+if (percent > 100) {
+  statusText.textContent = `Oops! You’ve exceeded your monthly limit.`;
+  statusIcon.src = "alert.png";         
+  statusIcon.alt = "Warning Icon";
+} else {
+  statusText.textContent = `${percent}% of your budget spent, looks good.`;
+  statusIcon.src = "check.png";        
+  statusIcon.alt = "Check Icon";
+}
+
+
+const savingsCircle = document.getElementById("savings-circle");
+const savingsPercent = Math.max(0, 100 - percent);
+savingsCircle.textContent = `${savingsPercent}%`;
+
+savingsCircle.classList.remove("low", "medium", "high");
+
+if (savingsPercent <= 20) {
+  savingsCircle.classList.add("low");
+} else if (savingsPercent <= 80) {
+  savingsCircle.classList.add("medium");
+} else {
+  savingsCircle.classList.add("high");
+}
+}
+
+  document.getElementById("budget-input").addEventListener("change", async (e) => {
+    const input = e.target.value.replace(/[₱,\s]/g, '');
+    const newBudget = parseFloat(input);
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || isNaN(newBudget)) return;
+
+    const { error } = await supabase
+      .from("budgets")
+      .update({ monthly_limit: newBudget })
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Failed to update budget:", error);
+      return;
+    }
+
+    currentBudget = newBudget;
+    fetchAndDisplayData();
+  });
+
+ fetchAndDisplayData();
+
+    // Popup menu toggle code
+    const menuIconWrapper = document.querySelector(".menu-icon-wrapper");
+    const popupMenu = menuIconWrapper.querySelector(".popup-menu");
+    const menuBtn = menuIconWrapper.querySelector(".menu-btn");
+
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent document click handler immediately hiding
+      if (popupMenu.style.display === "block") {
+        popupMenu.style.display = "none";
+      } else {
+        popupMenu.style.display = "block";
+      }
+    });
+
+    // Close popup when clicking outside
+    document.addEventListener("click", (event) => {
+      if (!menuIconWrapper.contains(event.target)) {
+        popupMenu.style.display = "none";
+      }
+    });
+const manualIcon = document.querySelector('img[alt="Manual"]');
+if (manualIcon) {
+  manualIcon.addEventListener('click', function() {
+    window.location.href = "manual.html"; // Redirects to manual.html
+  });
+}
+
+// Link to scan.html when clicking the "Scanner" icon
+const scannerIcon = document.querySelector('img[alt="Scanner"]');
+if (scannerIcon) {
+  scannerIcon.addEventListener('click', function() {
+    window.location.href = "scan.html"; // Redirects to scan.html
+  });
+  
+}
+</script>
+</body>
+</html>

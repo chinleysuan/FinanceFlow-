@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Lato", sans-serif;
+    }
+
+    .main-container {
+      max-width: 400px;
+      margin: 0 auto;
+      background-color: #66D2CE;
+      padding-bottom: -1px;
+    }
+
+    .profile-container {
+      background: #64d3cf;
+      color: white;
+      position: relative;
+      border-radius: 0 0 2rem 2rem;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 80px;
+    }
+
+    .profile-img {
+      width: 78px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+     
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .profile-name {
+      font-size: 18px;
+      font-weight: 600px;
+    }
+
+    .profile-email {
+      font-size: 14px;
+      color: black;
+    }
+
+    .edit-button {
+      background: #51DE9A;
+      color:white;
+      border: none;
+      padding: 6px 25px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      position: absolute;
+      left: 23%;
+      transform: translateX(-50%);
+      bottom: -190px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+
+    .settings-menu {
+      background: white;
+      border-radius: 6rem 6rem 0 0;
+      margin: 70px auto -50px;
+      padding-top: 130px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 14px;
+      font-size: 20px;
+      font-weight: 500px;
+      color: black;
+      width: 100%;
+    }
+    
+    .menu-item-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .menu-item-left img {
+      width: 24px;
+      height: 24px;
+      margin-right: 15px;
+    }
+
+    .menu-item:not(:last-child) {
+      border-bottom: 1px solid #51DE9A;
+    }
+
+    .arrow {
+      color: black;
+      font-size: 30px;
+      margin-right: 70px;
+      font-weight: 500;
+    }
+
+    .logout {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: black;
+      width: 90%;
+      max-width: 400px;
+      margin: 0 auto 10px;
+      cursor: pointer;
+    }
+
+    .logout img {
+      width: 24px;
+      height: 24px;
+      margin-right: 15px;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      padding: 7px 0;
+      background: #f0fff4;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 400px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -3px -5px rgba(0, 0, 0, 0.1);
+      border: 2px solid lightblue;
+    }
+
+    .nav-item img {
+      width: 30px;
+      height: 30px;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="profile-container">
+      <div class="profile-header">
+        <img src="chinley.jpeg" alt="Profile Picture" class="profile-img" />
+        <div class="profile-info">
+          <div class="profile-name">Chin Lee Sua</div>
+          <div class="profile-email">chinleysuan88@gmail.com</div>
+        </div>
+      </div>
+
+     
+
+      <button class="edit-button">Edit Profile</button>
+    </div>
+
+    <div class="settings-menu">
+      <div class="menu-item"><span class="menu-item-left"><img src="language.jpeg" alt="Language">Language</span><span class="arrow">&gt;</span></div>
+      <div class="menu-item"><span class="menu-item-left"><img src="about.jpeg" alt="About">About</span><span class="arrow">&gt;</span></div>
+      <div class="menu-item"><span class="menu-item-left"><img src="logout.jpeg" alt="Log out">Log out</span></div>
+    </div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item"><img src="home_icon.png" alt="Home" /></div>
+    <div class="nav-item"><img src="analysis_icon.jpeg" alt="Chart" /></div>
+    <div class="nav-item"><img src="scan_icon.jpeg" alt="Scan" /></div>
+    <div class="nav-item"><img src="manual_icon.png" alt="List" /></div>
+    <div class="nav-item"><img src="profile_icon.png" alt="Profile" /></div>
+  </div>
+</body>
+</html>

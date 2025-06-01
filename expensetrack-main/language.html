@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Language Selector</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Lato', sans-serif;
+    }
+
+    body {
+      background: #fff;
+      color: #333;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background-color: #66d2ce;
+      padding: 15px 0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      color: black;
+    }
+
+    h4 {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      margin: 20px 0 10px 12px;
+      letter-spacing: 1px;
+    }
+
+    .section {
+      background: #f0fdf9;
+      border-radius: 10px;
+      padding: 10px 0;
+      margin: 0 12px 20px;
+    }
+
+    .language-item {
+      padding: 3px 20px;
+      border-bottom: 1px solid #66d2ce;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .language-item:last-child {
+      border-bottom: none;
+    }
+    .language-sub {
+      font-size: 12px;
+      color: black;
+      margin-top: 4px;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      padding: 7px 0;
+      background: #f0fff4;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 400px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 12px 12px 0 0;
+      box-shadow: -1 -3px 5px rgba(0, 0, 0, 0.1);
+      border: 2px solid lightblue;
+    }
+
+    .nav-item img {
+      width: 30px;
+      height: 30px;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">Language</div>
+
+  <h4>Suggested Language</h4>
+  <div class="section">
+    <div class="language-item">English</div>
+    <div class="language-item">Filipino</div>
+  </div>
+
+  <h4>Other Language</h4>
+  <div class="section">
+    <div class="language-item selected">日本語 <div class="language-sub">Japanese</div></div>
+    <div class="language-item">Español <div class="language-sub">Spanish</div></div>
+    <div class="language-item">Español (Latinoamérica) <div class="language-sub">Spanish (Latin America)</div></div>
+    <div class="language-item">Français <div class="language-sub">French</div></div>
+    <div class="language-item">Français (Canada) <div class="language-sub">French (Canada)</div></div>
+    <div class="language-item">Deutsch <div class="language-sub">German</div></div>
+    <div class="language-item">Русский <div class="language-sub">Russian</div></div>
+    <div class="language-item">Italiano <div class="language-sub">Italy</div></div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-item"><img src="home_icon.png" alt="Home" /></div>
+    <div class="nav-item"><img src="analysis_icon.jpeg" alt="Chart" /></div>
+    <div class="nav-item"><img src="scan_icon.jpeg" alt="Scan" /></div>
+    <div class="nav-item"><img src="manual_icon.png" alt="List" /></div>
+    <div class="nav-item"><img src="profile_icon.png" alt="Profile" /></div>
+  </div>
+
+</body>
+</html>
